@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+from forms import addMovieForm
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 import requests
@@ -6,10 +7,25 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = "secret key"
-app.config["MONGO_URI"] = "mongodb://localhost:27017/movies"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/user-movies"
 mongo = PyMongo(app)
 
+@app.route('/addMovie', methods=['GET','POST'])
+def addMovie():
+    form = addMovieForm()
 
+    if form.validate_on_submit():
+        form_json = form.json()
+        #addToDb = mongo.db.userMovies.insert({'_id': form.movieId, 'title': form.movieTitle, 'genre': form.movieGenre, 'rating': form.movieRating, 'released': form.movieReleased})
+        #return redirect('/userMovies')
+        return form_json
+    return render_template('addMovie.html', form=form)
+
+@app.route('/userMovies')
+def userMovies():
+    favMovies = mongo.db.userMovies.find()
+    return render_template('userMovies.html', favMovies=favMovies)
+    
 @app.route('/movie', methods=['POST'])
 def movie():
     apikey = '6f6c977'
@@ -75,12 +91,6 @@ def watched_movie(id):
 def unwatch_movie(id):
     mongo.db.userMovies.update({'_id':id},{'$set':{'watched': 'false'}})
     return userFavs()
-
-
-@app.route('/userFavs')
-def userFavs():
-    favMovies = mongo.db.userMovies.find()
-    return render_template('userMovies.html', favMovies=favMovies)
 
 @app.route('/')
 def index():

@@ -13,35 +13,19 @@
       <table class="table is-bordered">
   		<thead>
 		<tr>
-			<th>Poster</th>
 			<th>Title</th>
-			<th>Year</th>
-			<th>Remove</th>
-			<th>Watched</th>
+			<th>Genre</th>
+			<th>Rating</th>
+			<th>Released</th>
 		</tr>
 		</thead>
 		<tbody>
 		{% for item in favMovies %}
 			<tr>
-				<td><img src="{{ item.poster }}" width=100px; height=150px;></img></td>
-				<td><h1> {{ item.title }} </h1></td>
-				<td><h2> {{ item.rated }}</h2></td>
-				<td>
-					<form method="POST" action="/delete/{{item._id}}">
-						<button class="button is-danger">Remove</button>
-					</form>
-				</td>
-				<td>
-					{% if item.watched == 'true' %}
-					<form method="POST" action="/unwatch/{{item._id}}">
-						<button class="button is-primary is-outlined">Watched</button>
-					</form>
-					{% else %}
-					<form method="POST" action="/watched/{{item._id}}">
-						<button class="button is-primary">Watch</button>
-					</form>
-					{% endif %}
-				</td>
+				<td><h1> {{ item.movieTitle }} </h1></td>
+				<td><h2> {{ item.movieGenre }}</h2></td>
+				<td><h2> {{ item.movieRating }}</h2></td>
+				<td><h2> {{ item.movieReleased }}</h2></td>
 			</tr>
 		{% endfor %}
 		</tbody>
