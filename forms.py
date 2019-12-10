@@ -8,3 +8,6 @@ class addMovieForm(FlaskForm):
 	movieGenre = StringField('movieGenre', validators=[DataRequired()])
 	movieRating = StringField('movieRating', validators=[DataRequired()])
 	movieReleased = IntegerField('movieReleased', validators=[DataRequired()])
+
+class searchMovieForm(FlaskForm):
+	movieTitle = StringField('movieTitle')

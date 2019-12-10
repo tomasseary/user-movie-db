@@ -1,0 +1,5 @@
+<form method="POST" action="/searchMovie">
+    {{ form.csrf_token }}
+    {{ form.movieTitle.label }} {{ form.movieTitle(size=20) }}
+    <input type="submit" value="Go">
+</form>

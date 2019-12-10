@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request
-from forms import addMovieForm
+from flask import Flask, render_template, redirect
+from forms import addMovieForm, searchMovieForm
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
-import requests
 
 
 app = Flask(__name__)
@@ -10,96 +9,33 @@ app.secret_key = "secret key"
 app.config["MONGO_URI"] = "mongodb://localhost:27017/user-movies"
 mongo = PyMongo(app)
 
+@app.route('/')
+def userMovies():
+    favMovies = mongo.db.userMovies.find()
+    return render_template('userMovies.html', favMovies=favMovies)
+
 @app.route('/addMovie', methods=['GET','POST'])
 def addMovie():
     form = addMovieForm()
 
     if form.validate_on_submit():
-        form_json = form.json()
-        #addToDb = mongo.db.userMovies.insert({'_id': form.movieId, 'title': form.movieTitle, 'genre': form.movieGenre, 'rating': form.movieRating, 'released': form.movieReleased})
-        #return redirect('/userMovies')
-        return form_json
+        form_data = {'_id': form.movieId.data, 
+                    'title': form.movieTitle.data, 
+                    'genre': form.movieGenre.data, 
+                    'rating': form.movieRating.data, 
+                    'released': form.movieReleased.data}
+        addToDb = mongo.db.userMovies.insert(form_data)
+        return redirect('/')
     return render_template('addMovie.html', form=form)
 
-@app.route('/userMovies')
-def userMovies():
-    favMovies = mongo.db.userMovies.find()
-    return render_template('userMovies.html', favMovies=favMovies)
+@app.route('/searchMovie', methods=['GET','POST'])
+def searchMovie():
+    form = searchMovieForm()
+
+    if form.validate_on_submit():
+        result = mongo.db.userMovies.find({'title':{'$regex':form.movieTitle.data}})
+        return render_template('userMovies.html', favMovies=result)
+    return render_template('searchMovie.html', form=form)
     
-@app.route('/movie', methods=['POST'])
-def movie():
-    apikey = '6f6c977'
-    title_search = request.form['title_search']
-    r = requests.get('http://www.omdbapi.com/?apikey='+apikey+'&s='+title_search)
-    json_object = r.json()
-
-    items = json_object['Search']
-
-    for item in items:
-        title = item['Title']
-        year = item['Year']
-        poster = item['Poster']
-        imdbID = item['imdbID']
-
-    #return json_object
-    #return str(items)
-    return render_template('movie.html', items=items)
-
-@app.route('/info', defaults={'id': 'tt4654462'})
-@app.route('/info/<id>', methods=['POST','GET'])
-def info(id):
-    apikey = '6f6c977'
-    imdb_search = id
-    r = requests.get('http://www.omdbapi.com/?apikey='+apikey+'&i='+imdb_search)
-    json_object = r.json()
-
-    poster = json_object['Poster']
-    title = json_object['Title']
-    rated = json_object['Rated']
-    director = json_object['Director']
-    runtime = json_object['Runtime']
-    plot = json_object['Plot']
-    released = json_object['Released']
-    watched = 'false'
-
-    ratings = json_object['Ratings']
-
-    for rating in ratings:
-        source = rating['Source']
-        value = rating['Value']
-
-    if request.method == 'POST':
-        fav = mongo.db.userMovies.insert({'_id': id, 'title': title, 'rated': rated, 'poster': poster, 'watched': watched})
-        resp = 'Added to Favourites'
-        return userFavs()
-
-    #return json_object
-    return render_template('info.html', id=id, ratings=ratings, poster=poster, title=title, rated=rated, director=director, runtime=runtime, plot=plot, released=released, watched=watched)
-
-
-@app.route('/delete/<id>', methods=['POST'])
-def delete_movie(id):
-    mongo.db.userMovies.delete_one({'_id': id})
-    return userFavs()
-
-@app.route('/watched/<id>', methods=['POST'])
-def watched_movie(id):
-    mongo.db.userMovies.update({'_id':id},{'$set':{'watched': 'true'}})
-    return userFavs()
-
-@app.route('/unwatch/<id>', methods=['POST'])
-def unwatch_movie(id):
-    mongo.db.userMovies.update({'_id':id},{'$set':{'watched': 'false'}})
-    return userFavs()
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/infosearch')
-def infosearch():
-	return render_template('info-search.html')
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='127.0.0.1')
