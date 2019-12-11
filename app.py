@@ -28,6 +28,12 @@ def addMovie():
         return redirect('/')
     return render_template('addMovie.html', form=form)
 
+@app.route('/delete/<id>', methods=['POST'])
+def delete_movie(id):
+    mongo.db.userMovies.delete_one({'_id': id})
+    return redirect('/')
+
+
 @app.route('/searchMovie', methods=['GET','POST'])
 def searchMovie():
     form = searchMovieForm()
@@ -36,6 +42,13 @@ def searchMovie():
         result = mongo.db.userMovies.find({'title':{'$regex':form.movieTitle.data}})
         return render_template('userMovies.html', favMovies=result)
     return render_template('searchMovie.html', form=form)
-    
-if __name__ == '__main__':
-    app.run(debug=True, port=5000, host='127.0.0.1')
+
+@app.route('/watch/<id>', methods=['POST'])
+def watched_movie(id):
+    mongo.db.userMovies.update({'_id':id},{'$set':{'watched': 'true'}})
+    return redirect('/')
+
+@app.route('/unwatch/<id>', methods=['POST'])
+def unwatch_movie(id):
+    mongo.db.userMovies.update({'_id':id},{'$set':{'watched': 'false'}})
+    return redirect('/')
